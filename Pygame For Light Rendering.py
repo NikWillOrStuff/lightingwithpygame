@@ -77,46 +77,42 @@ while not done:
     
     
     for x in range(quality):
-     cy = 0
-     cx = 0
-     for x in range(size[1]):
-      if cy == size[1]:
-       break
-      for x in range(size[0]):
+        cy = 0
+        cx = 0
+        for x in range(size[1]):
+            if cy == size[1]:
+                break
+            for x in range(size[0]):
 
-       for light in lights:
-        for wall in walls:
-          if intersect((walls[wall][0], walls[wall][1]) , (walls[wall][2], walls[wall][3]), (lights[light][0], lights[light][1]), (cx,cy)) == True:
-            pass
-          else:
-            col = col +  ((255 / (dist(cx,cy,lights[light][0],lights[light][1]) + 0.1)) * lights[light][2])
-        
-        col = round(col)
-        #col = col +  ((255 / (dist(cx,cy,lights[x][0],lights[x][1]) + 0.1)) * lights[x][2])
+                for light in lights:
+                    for wall in walls:
+                        if intersect((walls[wall][0], walls[wall][1]) , (walls[wall][2], walls[wall][3]), (lights[light][0], lights[light][1]), (cx,cy)) == True:
+                            pass
+                        else:
+                            col = col +  ((255 / (dist(cx,cy,lights[light][0],lights[light][1]) + 0.1)) * lights[light][2])
+                    
+                    col = round(col)
+                    #col = col +  ((255 / (dist(cx,cy,lights[x][0],lights[x][1]) + 0.1)) * lights[x][2])
 
-        if col >= 255:
-          col = 255
-        if col <= 0:
-          col = 0
+                    if col >= 255:
+                        col = 255
+                    if col <= 0:
+                        col = 0
 
 
         pygame.draw.circle(screen,(col,col,col),(cx,cy),quality - 1)
         col = 0
         cx = cx + quality
 
-      cx = 0
-      z = 0
-      cy = cy + quality
-      for x in walls:
-       pygame.draw.line(screen,(255,255,255),(walls[x][0],walls[x][1]),(walls[x][2],walls[x][3]))
-      pygame.display.update()
-     print("update",quality,"   ")
+        cx = 0
+        z = 0
+        cy = cy + quality
+        for x in walls:
+            pygame.draw.line(screen,(255,255,255),(walls[x][0],walls[x][1]),(walls[x][2],walls[x][3]))
+        pygame.display.update()
+    print("update",quality,"   ")
      
-     quality = quality - 1
+    quality = quality - 1
      
-     if quality == 0:
-       break
-    
-    
-   
-
+    if quality == 0:
+        break
