@@ -1,122 +1,81 @@
-import pygame, math
-import pygame.gfxdraw
+import sys, pygame
+import math
+from time import sleep
+
+size = width, height = 600, 400
+quality = 1
+lightTravel = 12
 
 pygame.init()
+screen = pygame.display.set_mode(size)
+screen.fill((0,0,0))
+pygame.display.set_caption("2D shading renderer")
 
-size = [600,600]
+class colorLight:
+	def __init__(self, coordinates, colors):
+		self.place = (coordinates[0], coordinates[1])
+		self.color = (colors[0], colors[1], colors[2])
 
-cx = 0
-cy = 0
-
-
-lights = {1:(200,190,4)  ,  2:(315,225,1)  ,  3:(250,325,2)}
-
+colorLights = (colorLight((200,190), (256, 24, 512)),colorLight((315,225), (24, 512, 154)),colorLight((250,325), (512, 256, 128)))
 walls = {1:(300,200,300,250),2:(300,200,400,200),3:(215,310,275,310), 4:(500,200,500,250),5:(100,200,100,250)}
 
-print(lights[1][2])
-
-
-
-
-col = 0
-
-a = (300,200)
-b = (300,250)
-
-
-
+for light in colorLights:
+	for shade in range(3):
+		print(light.color[shade])
 
 def ccw(A,B,C):
-    return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
+	return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
 
-# Return true if line segments AB and CD intersect
 def intersect(A,B,C,D):
-    return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D)
+	return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D)
 
+#loop through all pixels on screen to render image
+for pixelY in range(math.floor(height/quality)):
+	for pixelX in range(math.floor(width/quality)):
+		#set brightness of current pixel according to distance from all lights
+		color = [0,0,0]
+		for light in colorLights:
 
+			lineofsight = True
+			for wall in walls:
+				if intersect((walls[wall][0], walls[wall][1]) , (walls[wall][2], walls[wall][3]), (light.place[0], light.place[1]), (pixelX*quality,pixelY*quality)) == True:
+					lineofsight = False					
 
-def dist(x1,y1,x2,y2):
- return math.sqrt((x1-x2)**2 + (y1-y2)**2)
+			if lineofsight:
+				distance = math.dist((pixelX*quality,pixelY*quality),light.place)
+				distance = distance / lightTravel
+				if distance > 1:
+					for x in range(3):
+						color[x] = color[x] + (light.color[x]/distance)
+				else:
+					for x in range(3):
+						color[x] = color[x] + light.color[x]
 
+		#cap colors at 255 before drawing
+		for x in range(3):
+			if color[x] > 255:
+				color[x] = 255
 
-print
+		pygame.draw.rect(screen, color, (pixelX*quality,pixelY*quality, quality, quality))
 
+	#once we're done with each X rows of pixels, perform updates
+	x = 5
+	if pixelY % x == x-1:
+		
+		for x in walls:
+			pygame.draw.line(screen,(255,255,255),(walls[x][0],walls[x][1]),(walls[x][2],walls[x][3]))
+		pygame.display.update()
+		print("Row", pixelY + 1)
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				sys.exit()
 
-quality = 2
+print("done!")
+pygame.display.update()
 
-screen = pygame.display.set_mode(size)
-pygame.display.set_caption("HQ Light Rendering")
-f = []
-# pygame.draw.circle(surface, color, center, 0)
-
-done = False
-clock = pygame.time.Clock()
-
-br = 0
-e = False
-z = 0
-
-while not done:
-    
-    # This limits the while loop to a max of 10 times per second.
-    # Leave this out and we will use all CPU we can.
-    clock.tick()
- 
-    for event in pygame.event.get(): # User did something
-        if event.type == pygame.QUIT: # If user clicked close
-            done=True # Flag that we are done so we exit this loop
-        if event.type == pygame.MOUSEBUTTONUP:
-          xy = pygame.mouse.get_pos()
-          print(xy)
-          #br = lights[1][2]
-          #lights[1] = {xy[0],xy[1],br}
-          #print(lights[1])
-          #quality = 0
-          #quality = 6
-          #screen.fill((0,0,0))
-    
-    
-    for x in range(quality):
-     cy = 0
-     cx = 0
-     for x in range(size[1]):
-      if cy == size[1]:
-       break
-      for x in range(size[0]):
-
-       for light in lights:
-        for wall in walls:
-          if intersect((walls[wall][0], walls[wall][1]) , (walls[wall][2], walls[wall][3]), (lights[light][0], lights[light][1]), (cx,cy)) == True:
-            pass
-          else:
-            col = col +  ((255 / (dist(cx,cy,lights[light][0],lights[light][1]) + 0.1)) * lights[light][2])
-        
-        col = round(col)
-        #col = col +  ((255 / (dist(cx,cy,lights[x][0],lights[x][1]) + 0.1)) * lights[x][2])
-
-        if col >= 255:
-          col = 255
-        if col <= 0:
-          col = 0
-
-
-        pygame.draw.circle(screen,(col,col,col),(cx,cy),quality - 1)
-        col = 0
-        cx = cx + quality
-
-      cx = 0
-      z = 0
-      cy = cy + quality
-      for x in walls:
-       pygame.draw.line(screen,(255,255,255),(walls[x][0],walls[x][1]),(walls[x][2],walls[x][3]))
-      pygame.display.update()
-     print("update",quality,"   ")
-     
-     quality = quality - 1
-     
-     if quality == 0:
-       break
-    
-    
-   
-
+#don't close automatically once render is complete
+while True:
+	for event in pygame.event.get():
+		if event.type == pygame.QUIT:
+			sys.exit()
+	sleep(.1)
